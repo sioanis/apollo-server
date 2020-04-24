@@ -349,7 +349,7 @@ export class EngineReportingAgent<TContext = any> {
     this.reportSizes[schemaHash] +=
       encodedTrace.length + Buffer.byteLength(statsReportKey);
 
-    // If the buffer gets big (according to our estimate), send.
+    // If the buffer gets big (accordin to our estimate), send.
     if (
       this.sendReportsImmediately ||
       this.reportSizes[schemaHash] >=

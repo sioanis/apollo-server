@@ -67,11 +67,7 @@ it('trace construction', async () => {
   addMockFunctionsToSchema({ schema });
   enableGraphQLExtensions(schema);
 
-  const traces: Array<AddTraceArgs> = [];
-
-  async function addTrace(args: AddTraceArgs) {
-    traces.push(args);
-  }
+  const addTrace = jest.fn();
 
   const reportingExtension = new EngineReportingExtension(
     {},
@@ -355,9 +351,7 @@ describe('tests for the shouldReportQuery reporting option', () => {
     addMockFunctionsToSchema({ schema });
     enableGraphQLExtensions(schema);
 
-    async function addTrace(_args: AddTraceArgs) {
-      throw new Error('Should not add any traces');
-    }
+    const addTrace = jest.fn();
 
     const reportingExtension = new EngineReportingExtension(
       {
@@ -395,6 +389,7 @@ describe('tests for the shouldReportQuery reporting option', () => {
     });
 
     requestDidEnd();
+    expect(addTrace).not.toBeCalled();
   });
 
   it('report traces based on operation name', async () => {
@@ -402,11 +397,7 @@ describe('tests for the shouldReportQuery reporting option', () => {
     addMockFunctionsToSchema({ schema });
     enableGraphQLExtensions(schema);
 
-    let tracesAdded = 0;
-
-    async function addTrace(_args: AddTraceArgs) {
-      tracesAdded += 1;
-    }
+    const addTrace = jest.fn();
 
     const reportingExtension = new EngineReportingExtension(
       {
@@ -444,7 +435,9 @@ describe('tests for the shouldReportQuery reporting option', () => {
     });
 
     requestDidEnd();
-    expect(tracesAdded).toEqual(1);
+    expect(addTrace).toBeCalledTimes(1);
+    addTrace.mockReset()
+
 
     const request2DidEnd = stack.requestDidStart({
       request: new Request('http://localhost:123/foo'),
@@ -471,7 +464,7 @@ describe('tests for the shouldReportQuery reporting option', () => {
     });
 
     request2DidEnd();
-    expect(tracesAdded).toEqual(1);
+    expect(addTrace).not.toBeCalled();
   });
 });
 
