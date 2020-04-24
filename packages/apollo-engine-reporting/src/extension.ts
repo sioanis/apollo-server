@@ -74,8 +74,9 @@ export class EngineReportingExtension<TContext = any>
       'metrics' | 'queryHash'
     >;
   }): EndHandler {
-    // If we don't want to report a query we can just return with a empty handler
-    // We set `captureTraces` because that information is used to
+    // If we don't want to report a query return early with an empty end handler
+    // We set `captureTraces` because that information is used to determine whether
+    // to send headers down to federated services from the gateway
     if (!this.shouldReportQuery(o.requestContext)) {
       o.requestContext.metrics.captureTraces = false;
       return () => {};
