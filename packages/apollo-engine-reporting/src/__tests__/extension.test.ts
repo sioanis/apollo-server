@@ -1,18 +1,18 @@
-import { makeExecutableSchema, addMockFunctionsToSchema } from "graphql-tools";
+import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
 import {
   GraphQLExtensionStack,
-  enableGraphQLExtensions
-} from "graphql-extensions";
-import { graphql, GraphQLError } from "graphql";
-import { Request } from "node-fetch";
+  enableGraphQLExtensions,
+} from 'graphql-extensions';
+import { graphql, GraphQLError } from 'graphql';
+import { Request } from 'node-fetch';
 import {
   EngineReportingExtension,
   makeTraceDetails,
-  makeHTTPRequestHeaders
-} from "../extension";
-import { Headers } from "apollo-server-env";
-import { InMemoryLRUCache } from "apollo-server-caching";
-import { Trace } from "apollo-engine-reporting-protobuf";
+  makeHTTPRequestHeaders,
+} from '../extension';
+import { Headers } from 'apollo-server-env';
+import { InMemoryLRUCache } from 'apollo-server-caching';
+import { Trace } from 'apollo-engine-reporting-protobuf';
 
 const emptyMockLogger = {
   warn: jest.fn(),
@@ -162,21 +162,17 @@ describe('check variableJson output for sendVariableValues all/none type', () =>
   });
 
   it('Case 4: Check behavior for invalid inputs', () => {
-    expect(
-      makeTraceDetails(
-        variables,
-        // @ts-ignore Testing untyped usage; only `{ none: true }` is legal.
-        { none: false },
-      ),
-    ).toEqual(nonFilteredOutput);
+    expect(makeTraceDetails(variables,
+      // @ts-ignore Testing untyped usage; only `{ none: true }` is legal.
+      { none: false }
+    )).toEqual(
+      nonFilteredOutput,
+    );
 
-    expect(
-      makeTraceDetails(
-        variables,
-        // @ts-ignore Testing untyped usage; only `{ all: true }` is legal.
-        { all: false },
-      ),
-    ).toEqual(filteredOutput);
+    expect(makeTraceDetails(variables,
+      // @ts-ignore Testing untyped usage; only `{ all: true }` is legal.
+      { all: false }
+    )).toEqual(filteredOutput);
   });
 });
 
@@ -352,149 +348,12 @@ headers.append('authorization', 'blahblah'); // THIS SHOULD NEVER BE SENT
 
 const headersOutput = { name: new Trace.HTTP.Values({ value: ['value'] }) };
 
-describe('tests for the shouldReportQuery reporting option', () => {
-  it('report no traces', async () => {
-    const schema = makeExecutableSchema({ typeDefs });
-    addMockFunctionsToSchema({ schema });
-    enableGraphQLExtensions(schema);
-
-    const addTrace = jest.fn();
-
-    const reportingExtension = new EngineReportingExtension(
-      {
-        shouldReportQuery: () => {
-          return false;
-        }
-      },
-      addTrace,
-      "schema-hash"
-    );
-
-    const stack = new GraphQLExtensionStack([reportingExtension]);
-    const requestContext = {
-      request: {
-        query,
-        operationName: "q",
-        extensions: {
-          clientName: "testing suite"
-        }
-      },
-      context: {},
-      metrics: {},
-      cache: new InMemoryLRUCache(),
-      logger: emptyMockLogger
-    };
-
-    const requestDidEnd = stack.requestDidStart({
-      request: new Request("http://localhost:123/foo"),
-      queryString: query,
-      requestContext: requestContext,
-      context: {}
-    });
-
-    await graphql({
-      schema,
-      source: query,
-      contextValue: { _extensionStack: stack },
-    });
-
-    requestDidEnd();
-    expect(addTrace).not.toBeCalled();
-    expect((requestContext.metrics as any).captureTraces).toBeFalsy();
-  });
-
-  it('report traces based on operation name', async () => {
-    const schema = makeExecutableSchema({ typeDefs });
-    addMockFunctionsToSchema({ schema });
-    enableGraphQLExtensions(schema);
-
-    const addTrace = jest.fn();
-
-    const reportingExtension = new EngineReportingExtension(
-      {
-        shouldReportQuery: request => {
-          return request.request.operationName === "report";
-        }
-      },
-      addTrace,
-      "schema-hash"
-    );
-
-    const requestContext = {
-      request: {
-        queryReport,
-        operationName: "report",
-        extensions: {
-          clientName: "testing suite"
-        }
-      },
-      context: {},
-      metrics: {},
-      cache: new InMemoryLRUCache(),
-      logger: emptyMockLogger
-    };
-
-    const stack = new GraphQLExtensionStack([reportingExtension]);
-    const requestDidEnd = stack.requestDidStart({
-      request: new Request("http://localhost:123/foo"),
-      queryString: queryReport,
-      requestContext: requestContext,
-      context: {}
-    });
-
-    await graphql({
-      schema,
-      source: queryReport,
-      contextValue: { _extensionStack: stack }
-    });
-
-    requestDidEnd();
-    expect(addTrace).toBeCalledTimes(1);
-    expect((requestContext.metrics as any).captureTraces).toBeTruthy;
-    addTrace.mockReset();
-
-    const requestContext2 = {
-      request: {
-        query,
-        operationName: "q",
-        extensions: {
-          clientName: "testing suite"
-        }
-      },
-      context: {},
-      metrics: {},
-      cache: new InMemoryLRUCache(),
-      logger: emptyMockLogger
-    };
-
-
-    const request2DidEnd = stack.requestDidStart({
-      request: new Request("http://localhost:123/foo"),
-      queryString: query,
-      requestContext: requestContext2,
-      context: {}
-    });
-
-    await graphql({
-      schema,
-      source: query,
-      contextValue: { _extensionStack: stack },
-    });
-
-    request2DidEnd();
-    expect(addTrace).not.toBeCalled();
-    expect((requestContext2.metrics as any).captureTraces).toBeFalsy;
-  });
-});
-
 describe('tests for the sendHeaders reporting option', () => {
   it('sendHeaders defaults to hiding all', () => {
     const http = makeTestHTTP();
-    makeHTTPRequestHeaders(
-      http,
-      headers,
+    makeHTTPRequestHeaders(http, headers,
       // @ts-ignore: `null` is not a valid type; check output on invalid input.
-      null,
+      null
     );
     expect(http.requestHeaders).toEqual({});
     makeHTTPRequestHeaders(http, headers, undefined);
@@ -515,20 +374,16 @@ describe('tests for the sendHeaders reporting option', () => {
 
   it('invalid inputs for sendHeaders.all and sendHeaders.none', () => {
     const httpSafelist = makeTestHTTP();
-    makeHTTPRequestHeaders(
-      httpSafelist,
-      headers,
+    makeHTTPRequestHeaders(httpSafelist, headers,
       // @ts-ignore Testing untyped usage; only `{ none: true }` is legal.
-      { none: false },
+      { none: false }
     );
     expect(httpSafelist.requestHeaders).toEqual(headersOutput);
 
     const httpBlocklist = makeTestHTTP();
-    makeHTTPRequestHeaders(
-      httpBlocklist,
-      headers,
+    makeHTTPRequestHeaders(httpBlocklist, headers,
       // @ts-ignore Testing untyped usage; only `{ all: true }` is legal.
-      { all: false },
+      { all: false }
     );
     expect(httpBlocklist.requestHeaders).toEqual({});
   });
